@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>A Letter for You 💌</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    .page-bg {
+      position:fixed; inset:0; z-index:1;
+      background: radial-gradient(ellipse at 25% 50%, rgba(219,39,119,.1), transparent 55%),
+                  radial-gradient(ellipse at 78% 45%, rgba(168,85,247,.12), transparent 55%),
+                  linear-gradient(180deg,#0f0520,#180430);
+    }
+    .content { position:relative; z-index:3; max-width:660px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+
+    /* ── ENVELOPE INTRO ── */
+    .envelope-stage { text-align:center; margin-bottom:3rem; }
+    .envelope-wrap { display:inline-block; cursor:pointer; position:relative; }
+    .envelope {
+      font-size:7rem; display:block;
+      animation:floatY 3s ease-in-out infinite;
+      filter:drop-shadow(0 0 20px rgba(255,61,127,.4));
+      transition:transform .3s;
+    }
+    .envelope:hover { transform:scale(1.08); }
+    .env-label { font-family:'Dancing Script',cursive; font-size:1.4rem; color:var(--lavender); margin-top:.5rem; }
+    .env-hint { font-size:.8rem; color:rgba(255,255,255,.35); margin-top:.3rem; letter-spacing:1px; }
+
+    /* ── LETTER ── */
+    .letter-paper {
+      background:linear-gradient(160deg,#1e0840,#2d0a5f);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:20px; padding:2.5rem 2.2rem;
+      position:relative; overflow:hidden;
+      box-shadow:0 0 60px rgba(168,85,247,.2);
+      display:none;
+    }
+    .letter-paper.open { display:block; animation:fadeInUp .7s ease both; }
+
+    /* decorative top line */
+    .letter-paper::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg,var(--pink),var(--purple),var(--gold));
+    }
+
+    .letter-date { font-size:.78rem; color:rgba(255,255,255,.35); letter-spacing:2px; margin-bottom:1.5rem; text-align:right; }
+    .letter-salutation { font-family:'Dancing Script',cursive; font-size:1.6rem; color:var(--lavender); margin-bottom:1.5rem; }
+
+    .letter-body p {
+      font-size:.97rem; line-height:1.95; color:rgba(255,255,255,.82); margin-bottom:1.2rem;
+      min-height:1.5rem;
+    }
+    .cursor { display:inline-block; width:2px; height:1em; background:var(--pink); animation:blink .6s step-end infinite; vertical-align:text-bottom; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .letter-highlight {
+      font-family:'Playfair Display',serif; font-style:italic;
+      font-size:1.2rem !important; color:var(--lavender) !important;
+      text-align:center; padding:1rem 1.5rem;
+      border-left:3px solid var(--pink); border-right:3px solid var(--pink);
+      margin:1.5rem 0 !important; display:block;
+    }
+    .letter-sign { font-family:'Dancing Script',cursive; font-size:1.3rem !important; color:var(--pink) !important; }
+
+    /* rose decoration */
+    .rose-row { text-align:center; font-size:1.5rem; letter-spacing:.5rem; margin-top:1.5rem; }
+
+    /* floating hearts */
+    .heart { position:fixed; pointer-events:none; z-index:2; font-size:1.2rem; animation:heartRise linear infinite; opacity:0; }
+    @keyframes heartRise { 0%{opacity:.6;transform:translateY(0) scale(.8)} 100%{opacity:0;transform:translateY(-100px) scale(1.3)} }
+
+    /* bottom nav */
+    .bottom-nav { text-align:center; margin-top:2.5rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+  <div class="page-bg"></div>
+  <div id="heart-layer"></div>
+
+  <div class="page-wrapper">
+    <div class="content">
+      <div class="section-label" style="text-align:center;margin-bottom:.5rem;">Something Special</div>
+      <h1 class="section-title">A Letter, Just for You 💌</h1>
+
+      <!-- Envelope -->
+      <div class="envelope-stage" id="envelope-stage">
+        <div class="envelope-wrap" id="envelope-btn">
+          <span class="envelope">💌</span>
+          <div class="env-label">Click to open your letter</div>
+          <div class="env-hint">A message waiting just for you ✨</div>
+        </div>
+      </div>
+
+      <!-- Letter paper -->
+      <div class="letter-paper" id="letter-paper">
+        <div class="letter-date">August 18th, 2026</div>
+        <div class="letter-salutation">Dear you,</div>
+        <div class="letter-body" id="letter-body">
+          <p id="p1"></p>
+          <p id="p2"></p>
+          <p id="p3"></p>
+          <span class="letter-highlight" id="p4" style="display:none"></span>
+          <p id="p5"></p>
+          <p id="p6"></p>
+          <p class="letter-sign" id="p7"></p>
+        </div>
+        <div class="rose-row" id="rose-row" style="display:none">🌸 🌷 🌺 🌸 🌷</div>
+      </div>
+
+      <div class="bottom-nav" id="bottom-nav" style="display:none">
+        <a href="cake.html" class="btn-glow" style="background:rgba(255,255,255,.1);border:1px solid var(--glass-border);">← Cake</a>
+        <a href="memories.html" class="btn-glow">🖼️ Memories →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    const PARAGRAPHS = [
+      { id:'p1', text:"On this very special day, I want you to pause for a moment and truly take it in — because today belongs entirely to you." },
+      { id:'p2', text:"There is something quietly extraordinary about the way you move through the world. A warmth that people feel before they even know why. A light that doesn't need to announce itself — it just is." },
+      { id:'p3', text:"I hope this birthday brings you the kind of joy that reaches all the way in. The kind that makes you feel completely, perfectly seen." },
+      { id:'p4', text:"You are extraordinary. Not just today — every single day.", highlight:true },
+      { id:'p5', text:"Here's to every dream you're chasing, every hope you're holding, and every beautiful thing the universe still has planned for you." },
+      { id:'p6', text:"Happy Birthday. May this be the most magical year of your life so far. 🎂✨" },
+      { id:'p7', text:"— Someone who notices 🌸" },
+    ];
+
+    let typing = false;
+
+    document.getElementById('envelope-btn').addEventListener('click', () => {
+      if(typing) return;
+      document.getElementById('envelope-stage').style.display='none';
+      document.getElementById('letter-paper').classList.add('open');
+      startTyping();
+      burstConfetti();
+      startHearts();
+    });
+
+    async function typeText(el, text, speed=28) {
+      const cursor = document.createElement('span');
+      cursor.className='cursor';
+      el.appendChild(cursor);
+      for(const char of text){
+        cursor.before(document.createTextNode(char));
+        await wait(speed + Math.random()*20);
+      }
+      cursor.remove();
+    }
+
+    function wait(ms){ return new Promise(r=>setTimeout(r,ms)); }
+
+    async function startTyping(){
+      typing=true;
+      for(const p of PARAGRAPHS){
+        const el=document.getElementById(p.id);
+        if(p.highlight) el.style.display='block';
+        await typeText(el, p.text, p.highlight?22:28);
+        await wait(400);
+      }
+      document.getElementById('rose-row').style.display='block';
+      document.getElementById('bottom-nav').style.display='flex';
+      typing=false;
+    }
+
+    function startHearts(){
+      const layer=document.getElementById('heart-layer');
+      const h=['💗','💖','💕','🌸','✨'];
+      setInterval(()=>{
+        const el=document.createElement('span');
+        el.className='heart';
+        el.textContent=h[Math.floor(Math.random()*h.length)];
+        el.style.cssText=`left:${Math.random()*100}%;bottom:${Math.random()*40}%;animation-duration:${2+Math.random()*2}s;animation-delay:0s;`;
+        layer.appendChild(el);
+        setTimeout(()=>el.remove(),4000);
+      },600);
+    }
+  </script>
+</body>
+</html>

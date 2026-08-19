@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Happy Birthday ✨</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    .hero {
+      min-height: 100vh; display:flex; align-items:center; justify-content:center;
+      flex-direction:column; text-align:center; padding: 5rem 1.5rem 3rem;
+      position:relative;
+    }
+    .hero-bg {
+      position:fixed; inset:0;
+      background: radial-gradient(ellipse at 30% 40%, #4a0080 0%, transparent 55%),
+                  radial-gradient(ellipse at 75% 65%, #800040 0%, transparent 50%),
+                  linear-gradient(180deg,#0f0520,#1a0535);
+      z-index:1;
+    }
+    .hero > * { position:relative; z-index:3; }
+
+    /* Balloons */
+    .balloons { position:fixed; top:0; left:0; width:100%; display:flex; justify-content:space-around; z-index:3; pointer-events:none; }
+    .balloon { font-size:clamp(2rem,4vw,3.5rem); animation:balloonFloat 4s ease-in-out infinite; display:inline-block; }
+    .balloon:nth-child(1){animation-delay:0s}   .balloon:nth-child(2){animation-delay:.6s}
+    .balloon:nth-child(3){animation-delay:1.2s} .balloon:nth-child(4){animation-delay:1.8s}
+    .balloon:nth-child(5){animation-delay:2.4s}
+    @keyframes balloonFloat { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-18px) rotate(4deg)} }
+
+    /* Stars rain */
+    .star-rain { position:fixed; inset:0; pointer-events:none; z-index:2; overflow:hidden; }
+    .star { position:absolute; top:-10px; font-size:1rem; animation:starFall linear infinite; opacity:0.6; }
+    @keyframes starFall { to { transform:translateY(110vh) rotate(360deg); opacity:0; } }
+
+    /* Date badge */
+    .date-badge {
+      display:inline-block; background:var(--glass); border:1px solid var(--glass-border);
+      backdrop-filter:blur(10px); color:var(--lavender);
+      font-size:0.8rem; letter-spacing:3px; text-transform:uppercase;
+      padding:.45rem 1.4rem; border-radius:99px; margin-bottom:1.5rem;
+      animation:fadeInDown .8s ease .2s both;
+    }
+
+    /* Title */
+    .hero-title {
+      font-family:'Playfair Display',serif;
+      font-size:clamp(3.2rem,10vw,7.5rem); line-height:1.05;
+      margin-bottom:1.2rem; animation:fadeInUp .9s ease .4s both;
+    }
+    .t1 { display:block; font-style:italic;
+      background:linear-gradient(135deg,#ffd6e7,#ffb3d1);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; 
+      padding-bottom: 0.2em; margin-bottom: -0.2em; }
+    .t2 { display:block; font-weight:700;
+      background:linear-gradient(135deg,var(--pink),var(--rose),var(--purple));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; 
+      padding-bottom: 0.2em; margin-bottom: -0.2em; }
+
+    .hero-sub {
+      font-family:'Dancing Script',cursive; font-size:clamp(1.2rem,3vw,1.7rem);
+      color:rgba(255,255,255,.7); margin-bottom:3rem;
+      animation:fadeInUp .9s ease .6s both;
+    }
+
+    /* CTA row */
+    .cta-row { display:flex; gap:1rem; flex-wrap:wrap; justify-content:center; animation:fadeInUp .9s ease .8s both; }
+
+    /* Floating emojis */
+    .fe-layer { position:fixed; inset:0; pointer-events:none; z-index:2; }
+    .fe { position:absolute; font-size:1.4rem; animation:floatY 5s ease-in-out var(--d) infinite; opacity:.55; }
+
+    /* Scroll hint */
+    .scroll-hint { margin-top:2.5rem; color:rgba(255,255,255,.35); font-size:.78rem; letter-spacing:2px; text-transform:uppercase; animation:fadeIn 1s ease 1.2s both; }
+    .scroll-arrow { font-size:1.4rem; animation:floatY 1.2s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+  <div class="hero-bg"></div>
+
+  <!-- Balloons -->
+  <div class="balloons">
+    <span class="balloon">🎈</span><span class="balloon">🎈</span>
+    <span class="balloon">🎈</span><span class="balloon">🎈</span><span class="balloon">🎈</span>
+  </div>
+
+  <!-- Star rain -->
+  <div class="star-rain" id="star-rain"></div>
+
+  <!-- Floating emoji layer -->
+  <div class="fe-layer">
+    <span class="fe" style="--d:0s;left:8%;top:75%">🌸</span>
+    <span class="fe" style="--d:1.1s;left:88%;top:70%">🌷</span>
+    <span class="fe" style="--d:2s;left:12%;top:40%">⭐</span>
+    <span class="fe" style="--d:.7s;left:82%;top:28%">🌟</span>
+    <span class="fe" style="--d:1.5s;left:50%;top:88%">🎀</span>
+    <span class="fe" style="--d:3s;left:93%;top:52%">🌺</span>
+    <span class="fe" style="--d:.3s;left:3%;top:55%">💫</span>
+  </div>
+
+  <!-- Page wrapper -->
+  <div class="page-wrapper">
+    <section class="hero">
+      <div class="date-badge">✨ August 18th ✨</div>
+
+      <h1 class="hero-title">
+        <span class="t1" style="font-size: 0.85em;">Happy Birthday</span>
+        <span class="t2">To My Aphrodite!</span>
+      </h1>
+
+      <p class="hero-sub">To someone who makes every day feel like a celebration 🌸</p>
+
+      <div class="cta-row">
+        <a href="wishes.html" class="btn-glow">🌸 See Wishes</a>
+        <a href="cake.html" class="btn-glow" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)">🎂 Blow Candles</a>
+        <a href="letter.html" class="btn-glow" style="background:linear-gradient(135deg,#db2777,#9333ea)">💌 Read Letter</a>
+      </div>
+
+      <div class="scroll-hint">
+        <div>Navigate through the pages above</div>
+        <div class="scroll-arrow">✨</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    // Star rain
+    const rain = document.getElementById('star-rain');
+    const stars = ['⭐','✨','💫','🌟','★'];
+    for (let i = 0; i < 25; i++) {
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = stars[Math.floor(Math.random()*stars.length)];
+      s.style.cssText = `left:${Math.random()*100}%;font-size:${.6+Math.random()*.8}rem;animation-duration:${5+Math.random()*8}s;animation-delay:${Math.random()*6}s;`;
+      rain.appendChild(s);
+    }
+    // Entrance confetti
+    setTimeout(burstConfetti, 500);
+  </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Memories & Moments 🖼️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    .page-bg {
+      position:fixed; inset:0; z-index:1;
+      background: radial-gradient(ellipse at center 40%, rgba(168,85,247,.15), transparent 60%),
+                  linear-gradient(180deg,#0f0520,#1a0535);
+    }
+    .content { position:relative; z-index:3; max-width:900px; margin:0 auto; padding:3rem 1.5rem 5rem; }
+
+    /* ── PHOTO FRAME ── */
+    .photo-section { display:flex; flex-direction:column; align-items:center; margin-bottom:4rem; }
+    .frame-outer {
+      position:relative; width:clamp(220px,40vw,300px); height:clamp(220px,40vw,300px);
+      margin:0 auto 2rem;
+    }
+    .frame-ring {
+      position:absolute; inset:-10px; border-radius:50%;
+      background:conic-gradient(var(--pink),var(--purple),var(--gold),var(--pink));
+      animation:spin 4s linear infinite;
+    }
+    .frame-inner {
+      position:absolute; inset:4px; border-radius:50%;
+      background:var(--dark2); display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .photo-placeholder {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:.6rem; padding:1.5rem; text-align:center;
+    }
+    .photo-placeholder .p-icon { font-size:4rem; }
+    .photo-placeholder .p-text { font-family:'Dancing Script',cursive; font-size:1.1rem; color:var(--lavender); }
+    .photo-placeholder .p-sub { font-size:.75rem; color:rgba(255,255,255,.35); }
+
+    /* Sparkle dots around frame */
+    .sparkle-ring { position:absolute; inset:-30px; pointer-events:none; }
+    .sp {
+      position:absolute; top:50%; left:50%;
+      width:8px; height:8px; border-radius:50%;
+      background:var(--gold); box-shadow:0 0 6px var(--gold);
+      transform:rotate(var(--a)) translateY(-175px);
+      animation:spPulse 2s ease-in-out infinite;
+      animation-delay:calc(var(--i)*0.25s);
+    }
+    @keyframes spPulse { 0%,100%{opacity:.4;transform:rotate(var(--a)) translateY(-175px) scale(.7)} 50%{opacity:1;transform:rotate(var(--a)) translateY(-180px) scale(1.2)} }
+
+    .photo-caption {
+      font-family:'Dancing Script',cursive; font-size:1.4rem;
+      color:rgba(255,255,255,.7); text-align:center; max-width:420px;
+    }
+    .photo-upload-hint {
+      margin-top:.8rem; font-size:.78rem; color:rgba(255,255,255,.3);
+      text-align:center; letter-spacing:.5px;
+    }
+
+    /* ── AFFIRMATION SLIDER ── */
+    .affirm-section { text-align:center; }
+    .affirm-wrapper { position:relative; max-width:680px; margin:0 auto; }
+    .affirm-card {
+      background:linear-gradient(135deg,rgba(168,85,247,.12),rgba(255,61,127,.08));
+      border:1px solid var(--glass-border); border-radius:22px;
+      padding:2.5rem 2rem;
+      font-family:'Playfair Display',serif; font-style:italic;
+      font-size:clamp(1.05rem,2.4vw,1.35rem); line-height:1.85;
+      color:rgba(255,255,255,.9); min-height:140px;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .affirm-card.animate { animation:cardSlide .4s ease; }
+    @keyframes cardSlide { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
+
+    .slider-controls { display:flex; align-items:center; justify-content:center; gap:1.2rem; margin-top:1.2rem; }
+    .sl-btn {
+      width:42px; height:42px; border-radius:50%;
+      background:var(--glass); border:1px solid var(--glass-border);
+      color:#fff; font-size:1.3rem; cursor:pointer;
+      transition:background .3s; display:flex; align-items:center; justify-content:center;
+    }
+    .sl-btn:hover { background:rgba(255,255,255,.15); }
+    .dots { display:flex; gap:7px; }
+    .dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,.2); cursor:pointer; transition:background .3s, transform .3s; }
+    .dot.active { background:var(--pink); transform:scale(1.35); }
+
+    /* ── FINAL CTA ── */
+    .final-cta { text-align:center; margin-top:4rem; padding:2.5rem 2rem; background:var(--glass); border:1px solid var(--glass-border); border-radius:22px; }
+    .final-cta h2 { font-family:'Playfair Display',serif; font-size:1.8rem; margin-bottom:.8rem;
+      background:linear-gradient(135deg,var(--pink),var(--lavender));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .final-cta p { color:rgba(255,255,255,.6); font-size:.95rem; margin-bottom:1.5rem; }
+    .final-star { font-size:1.5rem; letter-spacing:.5rem; margin-bottom:1rem; }
+
+    /* bottom nav */
+    .bottom-nav { text-align:center; margin-top:2rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+  <div class="page-bg"></div>
+
+  <div class="page-wrapper">
+    <div class="content">
+      <div class="section-label" style="text-align:center;margin-bottom:.5rem;">Gallery</div>
+      <h1 class="section-title">Memories & Moments 🖼️</h1>
+
+      <!-- Photo Frame -->
+      <div class="photo-section">
+        <div class="frame-outer">
+          <div class="frame-ring"></div>
+          <div class="frame-inner" id="frame-inner">
+            <img src="mem/mem.jpg" alt="Vedankita's Beautiful Smile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+          </div>
+          <!-- Sparkle dots -->
+          <div class="sparkle-ring" id="sparkle-ring"></div>
+        </div>
+        <p class="photo-caption">"There's a kind of magic in the way you exist."</p>
+      </div>
+
+      <!-- Affirmation Slider -->
+      <div class="affirm-section">
+        <div class="section-label">Just So You Know</div>
+        <h2 class="section-title" style="font-size:1.8rem">Things that are true about you ✨</h2>
+        <div class="affirm-wrapper">
+          <div class="affirm-card" id="affirm-card">Loading...</div>
+          <div class="slider-controls">
+            <button class="sl-btn" id="prev-btn">‹</button>
+            <div class="dots" id="dots"></div>
+            <button class="sl-btn" id="next-btn">›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final CTA -->
+      <div class="final-cta reveal" data-delay="200">
+        <div class="final-star">⭐ ✨ 🌟 💫 ⭐</div>
+        <h2>Happy Birthday! 🎂</h2>
+        <p>Today, tomorrow, and always — you deserve to feel celebrated, cherished, and completely seen.</p>
+        <a href="index.html" class="btn-glow">🏠 Back to Home</a>
+      </div>
+
+      <div class="bottom-nav">
+        <a href="letter.html" class="btn-glow" style="background:rgba(255,255,255,.1);border:1px solid var(--glass-border);">← Letter</a>
+        <a href="index.html" class="btn-glow">🏠 Home</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    // Sparkle ring
+    const ring = document.getElementById('sparkle-ring');
+    for(let i=0;i<12;i++){
+      const sp=document.createElement('div');
+      sp.className='sp';
+      sp.style.cssText=`--a:${i*30}deg;--i:${i};margin-left:-4px;margin-top:-4px;`;
+      ring.appendChild(sp);
+    }
+
+    // Affirmations
+    const AFFIRMS = [
+      "You make the world a genuinely better place just by being in it. 🌍",
+      "Your laughter is one of the most beautiful sounds in existence. 😄",
+      "The way you carry yourself — there's something quietly extraordinary about it. ✨",
+      "You deserve every good thing that's making its way to you. 🌸",
+      "Someone out there thinks about your smile more than you'd ever guess. 💫",
+      "You are rare — genuinely, beautifully rare. 🦋",
+      "Your presence changes the energy of a room — always for the better. 🌟",
+      "On this birthday and every day — you are so, so worth celebrating. 🎉",
+    ];
+
+    const card = document.getElementById('affirm-card');
+    const dotsEl = document.getElementById('dots');
+    let cur = 0;
+
+    AFFIRMS.forEach((_,i)=>{
+      const d=document.createElement('div');
+      d.className='dot'+(i===0?' active':'');
+      d.addEventListener('click',()=>goTo(i));
+      dotsEl.appendChild(d);
+    });
+
+    function goTo(n){
+      document.querySelectorAll('.dot')[cur].classList.remove('active');
+      cur=(n+AFFIRMS.length)%AFFIRMS.length;
+      card.textContent=AFFIRMS[cur];
+      card.classList.remove('animate');
+      void card.offsetWidth;
+      card.classList.add('animate');
+      document.querySelectorAll('.dot')[cur].classList.add('active');
+    }
+    goTo(0);
+    document.getElementById('prev-btn').addEventListener('click',()=>goTo(cur-1));
+    document.getElementById('next-btn').addEventListener('click',()=>goTo(cur+1));
+    setInterval(()=>goTo(cur+1),4500);
+
+    // Entrance confetti
+    setTimeout(burstConfetti,300);
+  </script>
+</body>
+</html>

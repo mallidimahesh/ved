@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Make a Wish 🎂</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    .page-bg {
+      position:fixed; inset:0; z-index:1;
+      background: radial-gradient(ellipse at center 40%, rgba(251,191,36,.08), transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(168,85,247,.12), transparent 50%),
+                  linear-gradient(180deg,#0f0520,#1a0535);
+    }
+    .content { position:relative; z-index:3; max-width:760px; margin:0 auto; padding:3rem 1.5rem 5rem; text-align:center; }
+
+    /* BLOW BUTTON */
+    .mic-section { margin-bottom:1.5rem; }
+    .mic-btn {
+      display:inline-flex; align-items:center; gap:.7rem;
+      padding:.9rem 2rem; border-radius:99px; font-size:1rem; font-weight:500;
+      font-family:'Inter',sans-serif; border:none; cursor:pointer;
+      background:linear-gradient(135deg,#7c3aed,#4f46e5);
+      color:#fff; box-shadow:0 0 25px rgba(124,58,237,.4);
+      transition:transform .3s, box-shadow .3s;
+    }
+    .mic-btn:hover { transform:translateY(-2px); box-shadow:0 0 40px rgba(124,58,237,.6); }
+
+    .blow-flash { position:fixed; inset:0; background:rgba(255,255,255,.06); pointer-events:none; z-index:200; opacity:0; }
+    .blow-flash.flash { animation:flashOut .4s ease forwards; }
+    @keyframes flashOut { 0%{opacity:1} 100%{opacity:0} }
+
+    /* FULL CAKE CANVAS */
+    #cake-canvas { display:block; margin:0 auto; cursor:pointer; }
+
+    /* WISH BOX */
+    .wish-box { margin-top:2.5rem; padding:1.6rem 2rem; background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(168,85,247,.1)); border:1px solid rgba(251,191,36,.3); border-radius:20px; opacity:0; transform:translateY(12px); transition:opacity .5s, transform .5s; }
+    .wish-box.show { opacity:1; transform:translateY(0); }
+    .wish-box-text { font-family:'Dancing Script',cursive; font-size:1.4rem; color:var(--gold); }
+    .wish-input-section { margin-top:2rem; display:none; animation:fadeInUp .5s ease both; }
+    .wish-input-section.show { display:block; }
+    .wish-input-section label { display:block; font-family:'Dancing Script',cursive; font-size:1.2rem; color:var(--lavender); margin-bottom:.8rem; }
+    .wish-textarea { width:100%; padding:1rem 1.2rem; border-radius:14px; background:var(--glass); border:1px solid var(--glass-border); color:#fff; font-size:1rem; font-family:'Inter',sans-serif; resize:none; outline:none; backdrop-filter:blur(10px); transition:border-color .3s; }
+    .wish-textarea:focus { border-color:var(--pink); }
+    .submit-wish { margin-top:.8rem; }
+    .wish-sent { font-family:'Dancing Script',cursive; font-size:1.3rem; color:#34d399; margin-top:1rem; display:none; }
+    .wish-sent.show { display:block; animation:fadeInUp .5s ease; }
+    .bottom-nav { text-align:center; margin-top:3rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+  <div class="page-bg"></div>
+  <div class="blow-flash" id="blow-flash"></div>
+
+  <div class="page-wrapper">
+    <div class="content">
+      <div style="animation:fadeInDown .7s ease both">
+        <div class="section-label">Interactive</div>
+        <h1 class="section-title">Make a Wish! 🎂</h1>
+      </div>
+
+      <div class="mic-section" id="mic-section">
+        <button class="mic-btn" id="blow-btn">
+          <span style="font-size:1.3rem">💨</span>
+          <span id="mic-btn-text">Blow Out Candles</span>
+        </button>
+      </div>
+
+      <!-- Full Cake + Candles Canvas -->
+      <canvas id="cake-canvas" width="420" height="380"></canvas>
+
+      <div class="wish-box" id="wish-box">
+        <div class="wish-box-text">🌟 All candles out! The universe heard your wish! 🌟</div>
+      </div>
+
+
+      <div class="bottom-nav">
+        <a href="wishes.html" class="btn-glow" style="background:rgba(255,255,255,.1);border:1px solid var(--glass-border);">← Wishes</a>
+        <a href="letter.html" class="btn-glow">💌 Read the Letter →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+  (() => {
+    const C = document.getElementById('cake-canvas');
+    const ctx = C.getContext('2d');
+    const W = C.width, H = C.height;
+    const NUM = 5;
+    let candlesLit = true, blownOut = false, blowAnim = 0;
+    let smokeP = [];
+    const flick = Array.from({length:NUM}, () => Math.random()*Math.PI*2);
+
+    // Cake dimensions
+    const cakeW = 280, cakeX = W/2;
+    const layer1H = 70, layer2H = 60, creamH = 8;
+    const topY = 210, plateY = topY + layer1H + creamH + layer2H;
+    const candleH = 45, candleW = 8;
+    const spacing = cakeW / (NUM + 1);
+
+    function drawCake() {
+      // Plate / shadow
+      ctx.fillStyle = 'rgba(255,255,255,0.07)';
+      ctx.beginPath(); ctx.ellipse(cakeX, plateY+10, cakeW/2+30, 14, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
+      ctx.beginPath(); ctx.ellipse(cakeX, plateY+16, cakeW/2+10, 10, 0, 0, Math.PI*2); ctx.fill();
+
+      // Layer 2 (bottom) - chocolate
+      const l2Top = topY + layer1H + creamH;
+      const g2 = ctx.createLinearGradient(cakeX-cakeW/2, l2Top, cakeX+cakeW/2, l2Top);
+      g2.addColorStop(0, '#5c2d0e'); g2.addColorStop(0.3, '#8B4513'); g2.addColorStop(0.5, '#A0522D');
+      g2.addColorStop(0.7, '#8B4513'); g2.addColorStop(1, '#5c2d0e');
+      ctx.fillStyle = g2;
+      ctx.beginPath();
+      ctx.moveTo(cakeX-cakeW/2, l2Top); ctx.lineTo(cakeX-cakeW/2, plateY);
+      ctx.quadraticCurveTo(cakeX, plateY+18, cakeX+cakeW/2, plateY);
+      ctx.lineTo(cakeX+cakeW/2, l2Top); ctx.closePath(); ctx.fill();
+      // Bottom ellipse
+      ctx.fillStyle = '#6B3410';
+      ctx.beginPath(); ctx.ellipse(cakeX, plateY, cakeW/2, 10, 0, 0, Math.PI*2); ctx.fill();
+
+      // Cream layer between
+      const creamY = topY + layer1H;
+      ctx.fillStyle = '#FFF8DC';
+      ctx.fillRect(cakeX-cakeW/2, creamY, cakeW, creamH);
+      ctx.fillStyle = '#FAEBD7';
+      ctx.beginPath(); ctx.ellipse(cakeX, creamY+creamH, cakeW/2, 4, 0, 0, Math.PI*2); ctx.fill();
+
+      // Layer 1 (top) - pink/strawberry
+      const g1 = ctx.createLinearGradient(cakeX-cakeW/2, topY, cakeX+cakeW/2, topY);
+      g1.addColorStop(0, '#c2185b'); g1.addColorStop(0.3, '#e91e63'); g1.addColorStop(0.5, '#f06292');
+      g1.addColorStop(0.7, '#e91e63'); g1.addColorStop(1, '#c2185b');
+      ctx.fillStyle = g1;
+      ctx.fillRect(cakeX-cakeW/2, topY, cakeW, layer1H);
+
+      // Top ellipse (frosting)
+      const gTop = ctx.createRadialGradient(cakeX, topY, 10, cakeX, topY, cakeW/2);
+      gTop.addColorStop(0, '#fce4ec'); gTop.addColorStop(0.6, '#f8bbd0'); gTop.addColorStop(1, '#f48fb1');
+      ctx.fillStyle = gTop;
+      ctx.beginPath(); ctx.ellipse(cakeX, topY, cakeW/2, 16, 0, 0, Math.PI*2); ctx.fill();
+
+      // Frosting drips
+      const drips = [0.1,0.2,0.35,0.5,0.65,0.8,0.9];
+      const dripH = [22,30,18,26,20,28,16];
+      drips.forEach((p,i) => {
+        const dx = cakeX - cakeW/2 + cakeW * p;
+        const dh = dripH[i];
+        ctx.fillStyle = '#f8bbd0';
+        ctx.beginPath();
+        ctx.moveTo(dx-6, topY+6); ctx.quadraticCurveTo(dx-7, topY+dh, dx, topY+dh+5);
+        ctx.quadraticCurveTo(dx+7, topY+dh, dx+6, topY+6); ctx.fill();
+      });
+
+      // Decorations - small dots on layer 1
+      for (let i = 0; i < 8; i++) {
+        const angle = (i/8)*Math.PI;
+        const dx = cakeX - cakeW/2 + 20 + i*(cakeW-40)/7;
+        const dy = topY + layer1H/2 + Math.sin(angle)*8;
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.beginPath(); ctx.arc(dx, dy, 3, 0, Math.PI*2); ctx.fill();
+      }
+
+      // Text on cake layers
+      ctx.save();
+      ctx.textAlign = 'center';
+      
+      // Pink layer text
+      ctx.font = '18px "Inter", sans-serif';
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillText('HAPPY BIRTHDAY', cakeX, topY + layer1H/2 + 6);
+      
+      // Brown layer text
+      ctx.font = '700 32px "Dancing Script", cursive';
+      ctx.fillStyle = '#fff9c4'; // Light golden/cream color stands out well on chocolate
+      ctx.shadowColor = 'rgba(0,0,0,0.5)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetY = 2;
+      ctx.fillText('Vedankita', cakeX, l2Top + layer2H/2 + 10);
+      ctx.restore();
+    }
+
+    function drawCandles(t) {
+      for (let i = 0; i < NUM; i++) {
+        const cx = cakeX - cakeW/2 + spacing * (i+1);
+        const cy = topY - 10;
+        // Candle body
+        const colors = [['#fff9c4','#fbc02d'],['#f8bbd0','#e91e63'],['#d1c4e9','#7c4dff'],['#b2dfdb','#009688'],['#bbdefb','#1976d2']];
+        const gc = ctx.createLinearGradient(cx, cy-candleH, cx, cy);
+        gc.addColorStop(0, colors[i][0]); gc.addColorStop(1, colors[i][1]);
+        ctx.fillStyle = gc;
+        ctx.beginPath(); ctx.roundRect(cx-candleW/2, cy-candleH, candleW, candleH, 3); ctx.fill();
+        // Wick
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.moveTo(cx, cy-candleH); ctx.lineTo(cx, cy-candleH-7); ctx.stroke();
+
+        if (!candlesLit) continue;
+        const f = flick[i], s = Math.sin(t*8+f)*2*(1-blowAnim*0.8);
+        const fh = (18+Math.sin(t*6+f)*3)*(1-blowAnim);
+        const fw = (7+Math.sin(t*10+f)*1)*(1-blowAnim*0.5);
+        const fx = cx+s, fy = cy-candleH-7;
+        if (fh < 1) continue;
+        // Glow
+        const gg = ctx.createRadialGradient(fx,fy-fh*.4,0,fx,fy-fh*.3,fh*1.5);
+        gg.addColorStop(0,'rgba(255,200,50,0.3)'); gg.addColorStop(1,'rgba(255,100,0,0)');
+        ctx.fillStyle = gg;
+        ctx.beginPath(); ctx.ellipse(fx,fy-fh*.3,fh*1.2,fh*1.5,0,0,Math.PI*2); ctx.fill();
+        // Outer
+        ctx.fillStyle = 'rgba(255,120,20,0.85)';
+        ctx.beginPath(); ctx.moveTo(fx,fy-fh);
+        ctx.quadraticCurveTo(fx+fw,fy-fh*.4,fx+fw*.3,fy);
+        ctx.quadraticCurveTo(fx,fy+2,fx-fw*.3,fy);
+        ctx.quadraticCurveTo(fx-fw,fy-fh*.4,fx,fy-fh); ctx.fill();
+        // Mid
+        ctx.fillStyle = 'rgba(255,210,60,0.9)';
+        ctx.beginPath(); const mh=fh*.65,mw=fw*.55;
+        ctx.moveTo(fx,fy-mh);
+        ctx.quadraticCurveTo(fx+mw,fy-mh*.3,fx+mw*.2,fy);
+        ctx.quadraticCurveTo(fx,fy+1,fx-mw*.2,fy);
+        ctx.quadraticCurveTo(fx-mw,fy-mh*.3,fx,fy-mh); ctx.fill();
+        // Core
+        ctx.fillStyle = 'rgba(200,225,255,0.9)';
+        ctx.beginPath(); ctx.ellipse(fx,fy-fh*.2,fw*.2,fh*.25,0,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    function drawSmoke() {
+      smokeP.forEach(p => {
+        p.y -= p.vy; p.x += Math.sin(p.life*3)*0.3; p.life -= 0.012; p.r += 0.15;
+        if (p.life > 0) {
+          ctx.fillStyle = `rgba(180,180,200,${p.life*0.4})`;
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+        }
+      });
+      smokeP = smokeP.filter(p => p.life > 0);
+    }
+
+    function frame(time) {
+      ctx.clearRect(0,0,W,H);
+      drawCake();
+      drawCandles(time*0.001);
+      drawSmoke();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+
+    function blowOutAll() {
+      if (blownOut) return; blownOut = true;
+      let start = null;
+      function anim(ts) {
+        if (!start) start = ts;
+        blowAnim = Math.min(1,(ts-start)/500);
+        if (blowAnim >= 1) {
+          candlesLit = false;
+          for (let i = 0; i < NUM; i++) {
+            const cx = cakeX-cakeW/2+spacing*(i+1), cy = topY-10-candleH-7;
+            for (let k=0;k<6;k++) smokeP.push({x:cx+(Math.random()-.5)*6,y:cy,vy:.4+Math.random()*.6,r:1+Math.random()*2,life:.7+Math.random()*.3});
+          }
+          document.getElementById('blow-flash').classList.add('flash');
+          setTimeout(()=>document.getElementById('blow-flash').classList.remove('flash'),400);
+          setTimeout(()=>{burstConfetti();document.getElementById('wish-box').classList.add('show');},500);
+          if (micActive) stopMic(); return;
+        }
+        requestAnimationFrame(anim);
+      }
+      requestAnimationFrame(anim);
+    }
+
+    document.getElementById('blow-btn').addEventListener('click', blowOutAll);
+
+
+  })();
+  </script>
+</body>
+</html>

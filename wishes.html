@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Birthday Wishes 🌸</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="shared.css"/>
+  <style>
+    .page-bg {
+      position:fixed; inset:0; z-index:1;
+      background: radial-gradient(ellipse at 20% 50%, rgba(168,85,247,.12), transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(255,61,127,.1), transparent 60%),
+                  linear-gradient(180deg,#0f0520,#1a0535);
+    }
+    .content { position:relative; z-index:3; max-width:1100px; margin:0 auto; padding:3rem 1.5rem 4rem; }
+
+    /* Hero text */
+    .wishes-hero { text-align:center; margin-bottom:3rem; animation:fadeInDown .8s ease both; }
+    .wishes-hero .emoji-row { font-size:2.5rem; margin-bottom:1rem; }
+
+    /* GRID */
+    .wish-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1.5rem; }
+
+    /* Cards */
+    .wish-card {
+      background:var(--glass); border:1px solid var(--glass-border);
+      backdrop-filter:blur(14px); border-radius:22px; padding:2rem 1.8rem;
+      text-align:center; cursor:pointer;
+      transition:transform .35s, box-shadow .35s, background .35s;
+      opacity:0; transform:translateY(30px);
+      position:relative; overflow:hidden;
+    }
+    .wish-card.visible { opacity:1; transform:translateY(0); transition:opacity .6s ease,transform .6s ease,box-shadow .35s,background .35s; }
+    .wish-card:hover { transform:translateY(-10px) scale(1.02); box-shadow:0 24px 50px rgba(168,85,247,.25); }
+    .wish-card:hover .card-bg-glow { opacity:1; }
+    .wish-card.flipped .card-front { display:none; }
+    .wish-card.flipped .card-back { display:flex; }
+
+    .card-bg-glow {
+      position:absolute; inset:0; border-radius:22px; opacity:0;
+      background:linear-gradient(135deg,rgba(255,61,127,.07),rgba(168,85,247,.07));
+      transition:opacity .4s;
+    }
+    .card-front, .card-back { position:relative; z-index:2; }
+    .card-back { display:none; flex-direction:column; align-items:center; justify-content:center; min-height:180px; }
+
+    .card-icon { font-size:3rem; margin-bottom:1rem; animation:floatY 3s ease-in-out infinite; display:block; }
+    .card-title { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--lavender); margin-bottom:.7rem; }
+    .card-text { font-size:.9rem; color:rgba(255,255,255,.65); line-height:1.75; }
+    .card-back-text { font-family:'Dancing Script',cursive; font-size:1.25rem; color:rgba(255,255,255,.9); line-height:1.7; }
+    .tap-hint { position:absolute; bottom:.8rem; right:1rem; font-size:.7rem; color:rgba(255,255,255,.25); }
+
+    /* floating petals */
+    .petal { position:fixed; pointer-events:none; z-index:2; font-size:1.1rem; animation:petalFall linear infinite; opacity:0.55; }
+    @keyframes petalFall { 0%{transform:translateY(-20px) rotate(0deg);opacity:.7} 100%{transform:translateY(110vh) rotate(720deg);opacity:0} }
+
+    /* bottom nav */
+    .bottom-nav { text-align:center; margin-top:3rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+
+    .reveal { opacity:0; transform:translateY(30px); }
+    .reveal.visible { animation:fadeInUp .6s ease forwards; }
+
+    /* Modal / Slideshow */
+    .slideshow-modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      z-index: 9999; display: none; align-items: center; justify-content: center;
+      backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
+    }
+    .slideshow-modal.show { display: flex; opacity: 1; }
+    .modal-close {
+      position: absolute; top: 20px; right: 25px; background: none; border: none;
+      color: white; font-size: 2.5rem; cursor: pointer; transition: transform 0.2s;
+      z-index: 10;
+    }
+    .modal-close:hover { transform: scale(1.1); color: var(--pink); }
+    .slideshow-content {
+      display: flex; flex-direction: column; align-items: center; width: 90%; max-width: 800px;
+    }
+    .slideshow-media-container {
+      width: 100%; height: 60vh; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5); position: relative;
+    }
+    .slideshow-media-container img, .slideshow-media-container video {
+      max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px;
+      animation: fadeIn 0.4s ease;
+    }
+    .slideshow-controls {
+      display: flex; gap: 2rem; margin-top: 1rem;
+    }
+    .slideshow-controls button {
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+      color: white; border-radius: 50%; width: 50px; height: 50px; font-size: 1.2rem;
+      cursor: pointer; transition: background 0.2s, transform 0.2s;
+    }
+    .slideshow-controls button:hover { background: rgba(255,255,255,0.25); transform:scale(1.05); }
+    .slideshow-text {
+      font-family: 'Dancing Script', cursive; font-size: 1.8rem; color: var(--lavender);
+      margin-top: 1.5rem; text-align: center; text-shadow: 0 2px 4px rgba(0,0,0,0.5); line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg-canvas"></canvas>
+  <div class="page-bg"></div>
+  <div id="petal-layer"></div>
+
+  <!-- Slideshow Modal -->
+  <div class="slideshow-modal" id="slideshow-modal">
+    <button class="modal-close" id="modal-close">✖</button>
+    <div class="slideshow-content">
+      <div class="slideshow-media-container" id="slideshow-media-container"></div>
+      <div class="slideshow-controls">
+        <button id="slideshow-prev">◀</button>
+        <button id="slideshow-next">▶</button>
+      </div>
+      <p class="slideshow-text" id="slideshow-text"></p>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
+    <div class="content">
+      <div class="wishes-hero reveal">
+        <div class="emoji-row">🌸🌷🌺🌸🌷</div>
+        <div class="section-label">For You</div>
+        <h1 class="section-title">Birthday Wishes 🌠</h1>
+        <p style="color:rgba(255,255,255,.55);font-size:.95rem;">Tap any card to reveal what's inside 💫</p>
+      </div>
+
+      <div class="wish-grid">
+
+        <div class="wish-card reveal" data-delay="0">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">🌟</span>
+            <h3 class="card-title">Endless Joy</h3>
+            <p class="card-text">May every morning greet you with something worth smiling about.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">You deserve a joy so full it spills over and lights up everyone around you. 🌟</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+        <div class="wish-card reveal" data-delay="100">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">🦋</span>
+            <h3 class="card-title">New Adventures</h3>
+            <p class="card-text">May this year open doors to places, people, and moments beyond your imagination.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">Go explore. The world is waiting, and it's going to be even more beautiful with you in it. 🦋</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+        <div class="wish-card reveal" data-delay="200">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">💫</span>
+            <h3 class="card-title">Dreams Come True</h3>
+            <p class="card-text">Every dream you've held close — may this be the year they start becoming real.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">Your dreams are not random. They're arrows pointing exactly where you need to go. 💫</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+        <div class="wish-card reveal" data-delay="300">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">🌸</span>
+            <h3 class="card-title">Peace & Warmth</h3>
+            <p class="card-text">May you always be surrounded by people who truly see and celebrate you.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">You are worthy of the kind of peace that feels like a deep, long exhale. 🌸</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+        <div class="wish-card reveal" data-delay="400">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">✨</span>
+            <h3 class="card-title">Your Best Year</h3>
+            <p class="card-text">May this birthday mark the start of your most extraordinary chapter yet.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">You've grown so much. This year is yours to own — completely and beautifully. ✨</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+        <div class="wish-card reveal" data-delay="500">
+          <div class="card-bg-glow"></div>
+          <div class="card-front">
+            <span class="card-icon">🎯</span>
+            <h3 class="card-title">Bold Confidence</h3>
+            <p class="card-text">May you walk into every room knowing exactly how remarkable you are.</p>
+          </div>
+          <div class="card-back">
+            <p class="card-back-text">There is no one else like you. Own that. Completely. Fiercely. 🎯</p>
+          </div>
+          <span class="tap-hint">tap to reveal ✦</span>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav reveal" data-delay="600">
+        <a href="index.html" class="btn-glow" style="background:rgba(255,255,255,.1);border:1px solid var(--glass-border);">🏠 Home</a>
+        <a href="cake.html" class="btn-glow">🎂 Next: Blow the Candles →</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script>
+    // Falling petals
+    const layer = document.getElementById('petal-layer');
+    const petalEmojis = ['🌸','🌷','🌺','🌼'];
+    for (let i=0;i<18;i++){
+      const p=document.createElement('span');
+      p.className='petal';
+      p.textContent=petalEmojis[Math.floor(Math.random()*petalEmojis.length)];
+      p.style.cssText=`left:${Math.random()*100}%;animation-duration:${7+Math.random()*8}s;animation-delay:${Math.random()*8}s;font-size:${.8+Math.random()*.8}rem;`;
+      layer.appendChild(p);
+    }
+
+    const mediaData = {
+      "Endless Joy": [
+        "photos/endless joy/304988579_5020716718032446_4073253799800991251_n.jpg",
+        "photos/endless joy/download.jpeg",
+        "photos/endless joy/file.enc(3).jpg",
+        "photos/endless joy/mehul_maan-20260410-0001.jpg",
+        "photos/endless joy/natura_l_ove-20240930-0036.jpg",
+        "photos/endless joy/natura_l_ove-20250113-0001.heic",
+        "photos/endless joy/Snapchat-572275733.mp4",
+        "photos/endless joy/unnamed.webp",
+        "photos/endless joy/VID_70430125_015654_449.mp4",
+        "photos/endless joy/_say.slayyy_-20251111-0001.jpg"
+      ],
+      "New Adventures": [
+        "photos/new adventures/Screenshot 2026-08-19 002353.png",
+        "photos/new adventures/Screenshot 2026-08-19 002459.png",
+        "photos/new adventures/Screenshot 2026-08-19 002556.png",
+        "photos/new adventures/Screenshot_20240817-153705~2.png",
+        "photos/new adventures/the_vedankita-20240813-0002.jpg",
+        "photos/new adventures/the_vedankita-20240813-0004.mp4",
+        "photos/new adventures/the_vedankita-20240813-0006.jpg",
+        "photos/new adventures/the_vedankita-20240813-0013.jpg",
+        "photos/new adventures/the_vedankita-20240813-0017.jpg",
+        "photos/new adventures/the_vedankita-20250818-0003.jpg",
+        "photos/new adventures/the_vedankita-20250818-0006.jpg"
+      ],
+      "Peace & Warmth": [
+        "photos/peace/mehul_maan-20260410-0001.jpg",
+        "photos/peace/Screenshot 2026-08-19 001800.png",
+        "photos/peace/Screenshot 2026-08-19 001859.png",
+        "photos/peace/Screenshot 2026-08-19 002713.png",
+        "photos/peace/Screenshot 2026-08-19 003154.png",
+        "photos/peace/Screenshot 2026-08-19 003214.png",
+        "photos/peace/Screenshot 2026-08-19 003232.png",
+        "photos/peace/Screenshot 2026-08-19 003314.png",
+        "photos/peace/Screenshot 2026-08-19 003356.png",
+        "photos/peace/sejal_466-20241026-0001.jpg"
+      ],
+      "Your Best Year": [
+        "photos/your best year/natura_l_ove-20240930-0036.jpg",
+        "photos/your best year/Picsart_25-02-06_23-36-17-782.jpg",
+        "photos/your best year/Picsart_25-02-06_23-39-16-744.jpg",
+        "photos/your best year/Picsart_25-02-11_11-17-06-008.jpg",
+        "photos/your best year/Picsart_26-03-04_02-04-10-631.jpg",
+        "photos/your best year/Picsart_26-03-21_16-02-41-199.jpg",
+        "photos/your best year/Screenshot 2026-08-19 002459.png",
+        "photos/your best year/Screenshot 2026-08-19 002945.png",
+        "photos/your best year/Screenshot 2026-08-19 003115.png",
+        "photos/your best year/Screenshot 2026-08-19 003411.png",
+        "photos/your best year/Screenshot 2026-08-19 003701.png",
+        "photos/your best year/Snapchat-340868568.jpg",
+        "photos/your best year/the_vedankita-20240813-0014.jpg",
+        "photos/your best year/the_vedankita-20240813-0015.jpg",
+        "photos/your best year/the_vedankita-20241211-0002.jpg",
+        "photos/your best year/the_vedankita-20250818-0001.jpg",
+        "photos/your best year/the_vedankita-20250818-0005.jpg",
+        "photos/your best year/the_vedankita-20250818-0006.jpg"
+      ],
+      "Bold Confidence": [
+        "photos/bold and confident/304988579_5020716718032446_4073253799800991251_n.jpg",
+        "photos/bold and confident/Picsart_25-02-06_21-54-13-233.jpg",
+        "photos/bold and confident/Picsart_25-02-06_23-38-39-585.jpg",
+        "photos/bold and confident/Screenshot 2026-08-19 002459.png",
+        "photos/bold and confident/Screenshot_20240817-153815~2.png",
+        "photos/bold and confident/Screenshot_20240817-222558~3.png"
+      ]
+    };
+
+    let currentSlides = [];
+    let currentSlideIndex = 0;
+    const modal = document.getElementById('slideshow-modal');
+    const mediaContainer = document.getElementById('slideshow-media-container');
+    const textContainer = document.getElementById('slideshow-text');
+
+    function renderSlide() {
+      if (currentSlides.length === 0) return;
+      mediaContainer.innerHTML = '';
+      const src = currentSlides[currentSlideIndex];
+      const isVideo = src.endsWith('.mp4');
+      
+      if (isVideo) {
+        const vid = document.createElement('video');
+        vid.src = src;
+        vid.controls = false;
+        vid.autoplay = true;
+        vid.loop = true;
+        vid.muted = true;
+        vid.setAttribute('playsinline', '');
+        mediaContainer.appendChild(vid);
+      } else {
+        const img = document.createElement('img');
+        img.src = src;
+        mediaContainer.appendChild(img);
+      }
+    }
+
+    document.getElementById('slideshow-prev').addEventListener('click', () => {
+      currentSlideIndex = (currentSlideIndex - 1 + currentSlides.length) % currentSlides.length;
+      renderSlide();
+    });
+
+    document.getElementById('slideshow-next').addEventListener('click', () => {
+      currentSlideIndex = (currentSlideIndex + 1) % currentSlides.length;
+      renderSlide();
+    });
+
+    document.getElementById('modal-close').addEventListener('click', () => {
+      modal.classList.remove('show');
+      setTimeout(() => { modal.style.display = 'none'; mediaContainer.innerHTML = ''; }, 300);
+    });
+
+    // Card click logic
+    document.querySelectorAll('.wish-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const title = card.querySelector('.card-title').textContent.trim();
+        const text = card.querySelector('.card-back-text').textContent.trim();
+        
+        if (title === "Dreams Come True") {
+          // Normal flip for Dreams Come True
+          card.classList.toggle('flipped');
+          if(card.classList.contains('flipped')) burstConfetti && setTimeout(()=>{},100);
+        } else {
+          // Open Slideshow Modal
+          currentSlides = mediaData[title] || [];
+          currentSlideIndex = 0;
+          textContainer.textContent = text;
+          renderSlide();
+          modal.style.display = 'flex';
+          setTimeout(() => modal.classList.add('show'), 10);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
